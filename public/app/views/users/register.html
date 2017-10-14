@@ -5,18 +5,21 @@
 <form>
   <div class="form-group">
     <label>Käyttäjätunnus</label>
-    <input type="text" class="form-control">
+    <input type="text" class="form-control" ng-model="user.username">
   </div>
 
   <div class="form-group">
     <label>Salasana</label>
-    <input type="text" class="form-control">
+    <input type="password" class="form-control" ng-model="user.password">
   </div>
 
   <div class="form-group">
     <label>Salasana uudelleen</label>
-    <input type="text" class="form-control">
+    <input type="password" class="form-control" ng-model="user.passwordRepeat">
   </div>
 
-  <button class="btn btn-success">Rekisteröidy</button>
+  <button class="btn btn-success" ng-click="register(user)">Rekisteröidy</button>
+  
 </form>
+
+<div ng-if="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>

@@ -9,15 +9,67 @@ var Models = require('../models');
 router.post('/', function(req, res, next){
   // Lisää tämä käyttäjä (Vinkki: create), muista kuitenkin sitä ennen varmistaa, että käyttäjänimi ei ole jo käytössä! (Vinkki: findOne)
   var userToAdd = req.body;
-  // Palauta vastauksena lisätty käyttäjä
-  res.send(200);
+  if(!userToAdd || !userToAdd.username || 0 === userToAdd.username.length || !userToAdd.password || 0 === userToAdd.password.length){
+    res.status(400).jsonp(
+    {
+      "error":"Käyttäjätiliin tarvitaan kelvollinen käyttäjätunnus ja salasana!"
+    })
+    return
+  }
+  
+  Models.User.findOne({
+  where: {
+    username: userToAdd.username
+  }
+  })
+  .then(function(user){
+    if(user){
+      res.status(403).jsonp(
+      {
+        "error":"Käyttäjätunnus on jo käytössä!"
+      })
+      return
+    }
+    Models.User.create(userToAdd).then((newUser) => {
+      req.session.userId = newUser.id;
+      res.status(201).jsonp(
+      {
+        "msg":"success",
+        "NewUser" : newUser
+      }
+      )
+    })
+  });
 });
 
 // POST /users/authenticate
 router.post('/authenticate', function(req, res, next){
   // Tarkista käyttäjän kirjautuminen tässä. Tee se katsomalla, löytyykö käyttäjää annetulla käyttäjätunnuksella ja salasanalla (Vinkki: findOne ja sopiva where)
   var userToCheck = req.body;
-  res.send(200);
+  if(!userToCheck || !userToCheck.username || 0 === userToCheck.username.length || !userToCheck.password || 0 === userToCheck.password.length){
+    res.status(400).jsonp(
+    {
+      "error":"Käyttäjätiliin tarvitaan kelvollinen käyttäjätunnus ja salasana!"
+    })
+    return
+  }
+  Models.User.findOne({
+  where: {
+    username: userToCheck.username,
+    password: userToCheck.password
+  }
+  })
+  .then(function(user){
+    if(user){
+      req.session.userId = user.id;
+      res.json(user)
+    }else{
+      res.status(403).jsonp(
+      {
+        "error":"Väärä käyttäjätunnus tai salasana!"
+      })
+    }
+  });
 });
 
 // GET /users/logged-in
@@ -28,9 +80,19 @@ router.get('/logged-in', function(req, res, next){
     res.json({});
   }else{
     // Hae käyttäjä loggedInId-muuttujan arvon perusteella (Vinkki: findOne)
+     Models.User.findOne({
+      where: {
+        id: loggedInId
+      }
+      })
+      .then(function(user){
+        if(user){
+          res.json(user)
+        }else{
+          res.send(404);
+        }
+      });
   }
-
-  res.send(200);
 });
 
 // GET /users/logout
